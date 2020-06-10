@@ -1,4 +1,5 @@
 from typing import List
+import math
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
@@ -49,8 +50,16 @@ def get_predictions(df: pd.DataFrame, model_name: str, model_v: int, max_rows: i
     if dropout:
         model.load()
         model.model.model.train()
-        model.model.model.config.attention_probs_dropout_prob = 0.0
-        model.model.model.config.hidden_dropout_prob = 1.0
+        for x in range(len(model.model.model.roberta.encoder.layer)):
+            model.model.model.roberta.encoder.layer[x].attention.self.dropout.p = 0.0
+            model.model.model.roberta.encoder.layer[x].attention.output.dropout.p = 0.0
+            if x == math.ceil(len(model.model.model.roberta.encoder.layer)) / 2:
+                model.model.model.roberta.encoder.layer[x].output.dropout.p = 1.0
+            else:
+                model.model.model.roberta.encoder.layer[x].output.dropout.p = 0.0
+        model.model.model.classifier.dropout.p = 0.0
+        print("Model summary:", model.model.model)
+
     pbas = []
     should_match = []
     sample_df = df.sample(frac=1).head(max_rows)
@@ -64,7 +73,7 @@ def get_predictions(df: pd.DataFrame, model_name: str, model_v: int, max_rows: i
 
 def save_results(results_df: pd.DataFrame, model_name: str, model_v: int, with_noise: bool=False, dropout: bool=False, max_rows: int=10000):
     if dropout:
-        results_df.to_csv(f'./predictions/with_dropout_{model_name}_{str(model_v)}_sample_{str(max_rows)}.csv')
+        results_df.to_csv(f'./predictions/with_single_dropout_{model_name}_{str(model_v)}_sample_{str(max_rows)}.csv')
     elif with_noise:
         results_df.to_csv(f'./predictions/with_noise_{model_name}_{str(model_v)}_sample_{str(max_rows)}.csv')
     else:
@@ -75,8 +84,8 @@ if __name__ == "__main__":
     model_name = 'distilroberta_matching_pytorch'
     model_v = 4
     max_rows = 100000
-    drop = False
-    add_noise = True
+    drop = True
+    add_noise = False
 
     df = create_matching_dataset(download_from_gcp(GS_SKILL_MASTER))
     sample_df = get_predictions(df, model_name, model_v, max_rows, dropout=drop, with_noise=add_noise)
