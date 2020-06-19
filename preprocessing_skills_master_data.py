@@ -26,7 +26,7 @@ def create_matching_dataset(l: List[str]) -> pd.DataFrame:
     for x in l:
         for y in l:
             tuples_l.append(
-                ("[SKILL_REQUIREMNENT] " + x.strip(), "[SKILL] " + y.strip())
+                ("[SKILL_REQUIREMNENT] " + str(x).strip(), "[SKILL] " + str(y).strip())
             )
     return pd.DataFrame(tuples_l, columns =['need', 'offer'])
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     model_name = 'distilroberta_matching_pytorch'
     model_v = 4
     max_rows = 100000
-    drop = True
+    drop = False
     add_noise = False
 
     df = create_matching_dataset(download_from_gcp(GS_SKILL_MASTER))

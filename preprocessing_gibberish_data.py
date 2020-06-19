@@ -30,12 +30,11 @@ def save_results(results_df: pd.DataFrame, model_name: str, model_v: int, with_n
 
 
 if __name__ == "__main__":
-    model_name = 'bert_matching_pytorch'
-    model_v = 1
+    model_name = 'distilroberta_matching_pytorch'
+    model_v = 4
     max_rows = 100000
     drop = False
     add_noise = False
-
     df = create_matching_dataset(read_gibberish_data(GIBBERISH))
     sample_df = get_predictions(df, model_name, model_v, max_rows, dropout=drop, with_noise=add_noise)
     save_results(sample_df, model_name, model_v, with_noise=add_noise, dropout=drop, max_rows=max_rows)
