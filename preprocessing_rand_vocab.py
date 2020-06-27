@@ -13,23 +13,27 @@ np.random.seed(7)
 pd.set_option('display.max_columns', None)
 
 
-def read_rand_vocab_data(filepath:str) -> List[str]:
+def isEnglish(s):
+    try:
+        s.encode(encoding='utf-8').decode('ascii')
+    except UnicodeDecodeError:
+        return False
+    else:
+        return True
+
+
+def read_rand_vocab_data(filepath:str, max_rows: int=10000) -> List[str]:
     f = open(filepath, "r")
-    tokens = [x.strip() for x in f.read().split("\n") if not "unused" in x and not "##" in x and x.strip().isalnum()]
-    left_n = np.random.randint(1, 10)
-    right_n = np.random.randint(1, 10)
+    tokens = [x.strip() for x in f.read().split("\n") if not "unused" in x and not "##" in x and x.strip().isalnum() and isEnglish(x)]
+    n = np.random.randint(1, 3)
     c = 0
     l = []
-    while c <= 10000:
-        need = ""
-        offer = ""
-        for x in range(left_n):
-            need += " "
-            need += random.choice(tokens)
-        for y in range(right_n):
-            offer += " "
-            offer += random.choice(tokens)
-        l.append((need.replace("\n", " "), offer.replace("\n", " ")))
+    while c <= max_rows:
+        s = ""
+        for x in range(n):
+            s += " "
+            s += random.choice(tokens)
+        l.append(s.replace("\n", " ").strip())
         c += 1
     return l
 
@@ -44,11 +48,11 @@ def save_results(results_df: pd.DataFrame, model_name: str, model_v: int, with_n
 
 
 if __name__ == "__main__":
-    model_name = 'distilroberta_matching_pytorch'
-    model_v = 4
-    max_rows = 100000
+    model_name = 'bert_matching_pytorch'
+    model_v = 1
+    max_rows = 5000
     drop = False
     add_noise = False
-    df = create_matching_dataset(read_rand_vocab_data(RAND_VOCAB))
+    df = create_matching_dataset(read_rand_vocab_data(RAND_VOCAB, max_rows=max_rows))
     sample_df = get_predictions(df, model_name, model_v, max_rows, dropout=drop, with_noise=add_noise)
     save_results(sample_df, model_name, model_v, with_noise=add_noise, dropout=drop, max_rows=max_rows)
